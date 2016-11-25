@@ -5,8 +5,8 @@
 # version   : 2016/11/25/001
 #
 # usage: |
-#  | `bash html-self-link [FILE]`
-#  | `command-that-prints-html | bash html-self-link`
+#  | `bash html-selflink [FILE]`
+#  | `command-that-prints-html | bash html-selflink`
 #
 # note: |
 #  | This script is a quick and dirty workaround trying to compensate the gone
