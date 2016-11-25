@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+#---
+# file      : html-selflink
+# info      : read html and print out with selflinks at headers
+# version   : 2016/11/25/001
+#
+# usage: |
+#  | `bash html-self-link [FILE]`
+#  | `command-that-prints-html | bash html-self-link`
+#
+# note: |
+#  | This script is a quick and dirty workaround trying to compensate the gone
+#  | feature of pandoc to generate selflinks of headers. It already fails if
+#  | a header tag is not starting at the first character of a line and probably
+#  | in other cases. For my purpose it does everything as expected so far until
+#  | an option could be set, hopefully.
+#
+## More documentation after the code!
+#---
+
+# DEPENDENCY
+# ==========
+
+### `bash 4.3` (maybe less)
+[ -n "${BASH_VERSINFO}" ] && case ${BASH_VERSINFO} in
+        4)  [ "${BASH_VERSINFO[1]}" -ge 3 ]  ;;
+        *)  [ "${BASH_VERSINFO}"    -gt 4 ]  ;;
+    esac || { printf "%s\n" "${0}: requires bash 4.3+" ; exit 1 ; }
+
+# MAIN
+# ====
+
+declare     line    id    inner    level    tmp    pre    input
+            line=   id=   inner=   level=   tmp=   pre=   input=
+declare -a  line_
+            line_=()
+
+### If ${1} is not a readable file then read stdin
+[[ -r "${1}" ]] && input="${1}" || input=/dev/stdin
+
+while IFS= read -r line ; do
+
+    #### only accepts header at the very beginnig of a line
+    [[ "${line}" == '<h'@(1|2|3|4|5|6)* ]] || {
+        line_+=( "${line}" ) ; continue ; }
+
+    #### opening tag        level for closing tag
+    pre="${line%%>*}>"      level="${line[@]:2:1}"
+
+    #### if no `id` found inside opening tag look inside the previous line
+    [[ "${pre}" == *'id='* ]] && tmp="${line#*id=\"}" || tmp="${line_[-1]#*id=\"}"
+    id="${tmp%%\"*}"
+
+    #### if no id continue
+    [[ "${id%%<*}" != '' ]] || { line_+=( "${line}" ) ; continue ; }
+
+    tmp="${line#*>}"        inner="${tmp%<*}"
+    line_+=( "${pre}"'<a href="#'"${id}"'"'">${inner}</a></h${level}>" )
+
+done < "${input}"
+
+printf "%s\n" "${line_[@]}"
+
+#---
+# copyleft  : (Ɔ) 2016 C. Strasser (dev.crst æt gmail døt com)
+# www       : <https://github.com/devcrst>
+#
+# license   : |
+#  | [GNU GPLv3+](https://www.gnu.org/licenses/gpl.html)
+#  |
+#  | This program is free software; you can redistribute it and/or modify
+#  | it under the terms of the GNU General Public License as published by
+#  | the Free Software Foundation; either version 3 of the License, or
+#  | (at your option) any later version.
+#  |
+#  | This program is distributed in the hope that it will be useful,
+#  | but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  | GNU General Public License for more details.
+#  |
+#  | You should have received a copy of the GNU General Public License
+#  | along with this program; if not, write to the Free Software
+#  | Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  | MA 02110-1301, USA.
+#---
